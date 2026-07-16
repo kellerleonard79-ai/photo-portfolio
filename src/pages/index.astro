@@ -1,113 +1,212 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import { coverImage } from '../lib/series';
+import Photo from '../components/Photo.astro';
+import { coverPhoto } from '../lib/series';
 
-const series = (await getCollection('series')).sort(
+const collection = (await getCollection('series')).sort(
   (a, b) => a.data.order - b.data.order,
 );
 
-const cards = series.map((s) => ({
-  slug: s.id,
-  title: s.data.title,
-  cover: coverImage(s.id, s.data.cover),
-}));
+const cards = await Promise.all(
+  collection.map(async (s) => ({
+    slug: s.id,
+    title: s.data.title,
+    blurb: s.data.blurb,
+    cover: await coverPhoto(s.id, s.data.cover, s.data.images),
+  })),
+);
 
-const hero = cards.find((c) => c.cover)?.cover;
+// The hero carries almost the whole burden (§1): the Blue Angels diamond
+// formation. Fall back to the top-ranked series cover if it's ever missing.
+const aviation = collection.find((s) => s.id === 'aviation');
+const hero =
+  (await coverPhoto('aviation', '01-dsc-8640.jpg', aviation?.data.images)) ??
+  cards.find((c) => c.cover)?.cover;
 ---
 
-<Layout title="Photography">
+<Layout
+  title="Keller Leonard — Photography"
+  description="Photographs by Keller Leonard — aviation, motorsport, landscape and more."
+  ogImage={hero?.data.src}
+>
   <header class="hero">
     {hero && (
-      <img
-        src={hero.data.src}
-        width={hero.data.width}
-        height={hero.data.height}
-        alt=""
+      <Photo
+        photo={hero}
+        sizes="100vw"
+        eager
+        class="hero-img"
+        style="position:absolute; inset:0; width:100%; height:100%;"
       />
     )}
-    <div class="hero-overlay">
-      <h1>Photography</h1>
+    <div class="hero-shade"></div>
+    <div class="hero-bar wrap">
+      <h1 class="name">Keller Leonard</h1>
+      <nav class="hero-nav" aria-label="Primary">
+        <a href="/about">About</a>
+        <a href="/contact">Contact</a>
+      </nav>
     </div>
   </header>
 
   <main class="wrap">
-    <ul class="grid">
+    <h2 class="section-label">Series</h2>
+    <ul class="index">
       {cards.map((c) => (
         <li class="card">
           <a href={`/series/${c.slug}`}>
-            <div class="thumb">
-              {c.cover && (
-                <img
-                  src={c.cover.data.src}
-                  width={c.cover.data.width}
-                  height={c.cover.data.height}
-                  alt={c.title}
-                  loading="lazy"
-                />
-              )}
+            {c.cover && (
+              <Photo photo={c.cover} sizes="(max-width: 640px) 100vw, (max-width: 1180px) 50vw, 560px" class="card-img" />
+            )}
+            <div class="card-meta">
+              <h3 class="card-title">{c.title}</h3>
+              {c.blurb && <p class="card-blurb">{c.blurb}</p>}
             </div>
-            <span class="card-title">{c.title}</span>
           </a>
         </li>
       ))}
     </ul>
   </main>
+
+  <footer class="wrap site-foot">
+    <span class="foot-name">Keller Leonard</span>
+    <nav aria-label="Footer">
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+    </nav>
+  </footer>
 </Layout>
 
 <style>
   .hero {
     position: relative;
-    height: 68vh;
-    min-height: 360px;
+    height: 88vh;
+    min-height: 420px;
     overflow: hidden;
+    background: var(--surface);
   }
-  .hero img {
-    width: 100%;
+  .hero :global(.hero-img) {
     height: 100%;
-    object-fit: cover;
   }
-  .hero-overlay {
+  .hero-shade {
     position: absolute;
     inset: 0;
-    display: flex;
-    align-items: flex-end;
-    padding: 2rem;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0) 55%);
+    background: linear-gradient(
+      to bottom,
+      rgba(15, 17, 20, 0.55) 0%,
+      rgba(15, 17, 20, 0) 28%,
+      rgba(15, 17, 20, 0) 62%,
+      rgba(15, 17, 20, 0.7) 100%
+    );
+    pointer-events: none;
   }
-  .hero-overlay h1 {
+  .hero-bar {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    padding-top: 1.6rem;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .name {
     margin: 0;
-    font-size: clamp(2rem, 6vw, 4rem);
-    font-weight: 600;
-    letter-spacing: -0.02em;
+    font-size: clamp(1.6rem, 4.5vw, 2.6rem);
+    letter-spacing: -0.015em;
+    text-shadow: 0 1px 24px rgba(0, 0, 0, 0.35);
+  }
+  .hero-nav {
+    display: flex;
+    gap: 1.4rem;
+    font-size: var(--step--1);
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
   }
 
-  .grid {
+  .section-label {
+    font-family: var(--font-ui);
+    font-weight: 500;
+    font-size: var(--step--1);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin: 3.5rem 0 1.5rem;
+  }
+
+  .index {
     list-style: none;
-    margin: 3rem 0 5rem;
+    margin: 0 0 4rem;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.75rem;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2.5rem 1.75rem;
   }
-  .card a { display: block; }
-  .thumb {
-    aspect-ratio: 3 / 2;
-    overflow: hidden;
-    border-radius: 4px;
-    background: #1a1a1e;
-  }
-  .thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.4s ease;
-  }
-  .card a:hover .thumb img { transform: scale(1.04); }
-  .card-title {
+  .card a {
     display: block;
-    margin-top: 0.6rem;
-    font-size: 0.95rem;
-    letter-spacing: 0.01em;
+  }
+  .card :global(.card-img) {
+    aspect-ratio: 3 / 2;
+    border-radius: 3px;
+  }
+  .card :global(.card-img .frame-img) {
+    transition: transform 0.6s cubic-bezier(0.2, 0, 0.1, 1);
+  }
+  .card a:hover :global(.card-img .frame-img) {
+    transform: scale(1.03);
+  }
+  .card-meta {
+    margin-top: 0.75rem;
+  }
+  .card-title {
+    margin: 0;
+    font-size: var(--step-2);
+    transition: color 0.2s ease;
+  }
+  .card a:hover .card-title,
+  .card a:focus-visible .card-title {
+    color: var(--accent);
+  }
+  .card-blurb {
+    margin: 0.3rem 0 0;
+    font-size: var(--step--1);
+    color: var(--text-muted);
+    line-height: 1.5;
+    max-width: 42ch;
+  }
+
+  .site-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+    margin-top: 2rem;
+    border-top: 1px solid var(--surface);
+    color: var(--text-faint);
+    font-size: var(--step--1);
+  }
+  .foot-name {
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    color: var(--text-muted);
+  }
+  .site-foot nav {
+    display: flex;
+    gap: 1.25rem;
+  }
+
+  @media (max-width: 640px) {
+    .hero {
+      height: 82vh;
+    }
+    .index {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
   }
 </style>

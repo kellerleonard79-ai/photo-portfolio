@@ -1,0 +1,79 @@
+---
+import { Picture } from 'astro:assets';
+import type { Photo } from '../lib/series';
+
+interface Props {
+  photo: Photo;
+  sizes: string;
+  /** Hero / above-the-fold: load eagerly with high fetch priority (§4.6). */
+  eager?: boolean;
+  /** Extra inline style on the frame (width, aspect-ratio) set by the caller. */
+  style?: string;
+  class?: string;
+}
+
+const { photo, sizes, eager = false, style, class: className } = Astro.props;
+
+// Responsive widths (§4.2), capped to the intrinsic width so sharp never
+// upscales, and always including the intrinsic width itself.
+const CANDIDATES = [400, 800, 1200, 1600, 2400];
+const widths = Array.from(
+  new Set(
+    CANDIDATES.filter((w) => w <= photo.data.width).concat(photo.data.width),
+  ),
+).sort((a, b) => a - b);
+
+const frameStyle = `--lqip:url(${photo.lqip});${style ? ' ' + style : ''}`;
+---
+
+<span class:list={['frame', className]} style={frameStyle}>
+  <Picture
+    src={photo.data}
+    widths={widths}
+    sizes={sizes}
+    formats={['avif', 'webp']}
+    alt={photo.alt}
+    class="frame-img"
+    loading={eager ? 'eager' : 'lazy'}
+    decoding={eager ? 'auto' : 'async'}
+    fetchpriority={eager ? 'high' : undefined}
+  />
+</span>
+
+<style>
+  .frame {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    /* Blurred low-quality placeholder behind the image while it loads (§4.5). */
+    background-color: var(--surface);
+    background-image: var(--lqip);
+    background-size: cover;
+    background-position: center;
+  }
+  .frame :global(picture) {
+    display: block;
+    height: 100%;
+  }
+  .frame-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    /* A quiet fade as the image resolves over the placeholder (§ Motion). */
+    animation: frame-fade 0.7s ease both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .frame-img {
+      animation: none;
+    }
+  }
+  @keyframes frame-fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+</style>

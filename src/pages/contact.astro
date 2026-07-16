@@ -1,0 +1,81 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+// A mailto: link is a complete implementation — no form (§5).
+const email = 'kellerleonard79@gmail.com';
+---
+
+<Layout title="Contact — Keller Leonard" description="Contact Keller Leonard.">
+  <main class="page wrap">
+    <p class="back"><a href="/">← Series</a></p>
+    <h1>Contact</h1>
+    <p class="lede">For prints, commissions, or licensing —</p>
+    <a class="email" href={`mailto:${email}`}>{email}</a>
+  </main>
+
+  <footer class="wrap site-foot">
+    <span class="foot-name">Keller Leonard</span>
+    <nav aria-label="Footer">
+      <a href="/">Series</a>
+      <a href="/about">About</a>
+    </nav>
+  </footer>
+</Layout>
+
+<style>
+  .page {
+    padding-top: 1.75rem;
+    padding-bottom: 3rem;
+    max-width: 720px;
+  }
+  .back {
+    margin: 0 0 1.75rem;
+    font-size: var(--step--1);
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+  h1 {
+    margin: 0 0 1.5rem;
+    font-size: var(--step-5);
+  }
+  .lede {
+    margin: 0 0 0.75rem;
+    color: var(--text-muted);
+    font-size: var(--step-1);
+  }
+  .email {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: var(--step-3);
+    color: var(--accent);
+    border-bottom: 1px solid transparent;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .email:hover,
+  .email:focus-visible {
+    color: var(--accent-bright);
+    border-bottom-color: var(--accent-bright);
+  }
+
+  .site-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 2rem;
+    padding-bottom: 3rem;
+    margin-top: 3rem;
+    border-top: 1px solid var(--surface);
+    color: var(--text-faint);
+    font-size: var(--step--1);
+  }
+  .foot-name {
+    font-family: var(--font-display);
+    font-size: var(--step-0);
+    color: var(--text-muted);
+  }
+  .site-foot nav {
+    display: flex;
+    gap: 1.25rem;
+  }
+</style>
