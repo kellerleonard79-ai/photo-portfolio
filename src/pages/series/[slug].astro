@@ -1,0 +1,61 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import { seriesImages } from '../../lib/series';
+
+export async function getStaticPaths() {
+  const series = await getCollection('series');
+  return series.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const imgs = seriesImages(entry.id);
+---
+
+<Layout title={entry.data.title}>
+  <main class="wrap series">
+    <p class="back"><a href="/">← All series</a></p>
+    <h1>{entry.data.title}</h1>
+
+    <div class="stack">
+      {imgs.map((img, i) => (
+        <img
+          src={img.data.src}
+          width={img.data.width}
+          height={img.data.height}
+          alt={`${entry.data.title} — ${i + 1}`}
+          loading={i < 2 ? 'eager' : 'lazy'}
+        />
+      ))}
+    </div>
+  </main>
+</Layout>
+
+<style>
+  .series { padding-top: 2.5rem; padding-bottom: 5rem; }
+  .back {
+    margin: 0 0 1.5rem;
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+  .series h1 {
+    margin: 0 0 2.5rem;
+    font-size: clamp(1.8rem, 5vw, 3rem);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+    align-items: center;
+  }
+  .stack img {
+    width: 100%;
+    max-width: 960px;
+    border-radius: 4px;
+  }
+</style>
