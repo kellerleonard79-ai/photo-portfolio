@@ -1,12 +1,11 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"compatibility_date": "2026-07-16",
-	"compatibility_flags": ["global_fetch_strictly_public"],
 	"name": "photo-portfolio",
-	"main": "@astrojs/cloudflare/entrypoints/server",
+	// Static-assets-only Worker: no server entry (`main`). Astro's static build
+	// output in ./dist is served directly from Cloudflare's edge.
 	"assets": {
-		"directory": "./dist",
-		"binding": "ASSETS"
+		"directory": "./dist"
 	},
 	"observability": {
 		"enabled": true

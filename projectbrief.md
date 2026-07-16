@@ -236,7 +236,24 @@ Ship nothing that fails these:
 
 ## 9. Open questions
 
-- [ ] Domain name. Short. Sayable out loud without spelling it.
-- [ ] The nine series, ranked strongest-first. Which is the hero image?
-- [ ] Photographer's name / display name and about-page copy.
+- [ ] Domain name. Short. Sayable out loud without spelling it. (`site` in
+  `astro.config.mjs` and `public/robots.txt` currently use a
+  `https://kellerleonard.com` placeholder — update both once chosen.)
+- [x] ~~The nine series, ranked strongest-first. Which is the hero image?~~
+  Ships **five** curated genre series rather than nine — fewer, stronger, each a
+  full 5–14 images (§1). Ranked: **Aviation, Motorsports, Landscapes, Landmarks,
+  Wildlife.** Hero = the Blue Angels diamond formation (`aviation/01-dsc-8640`).
+  Adding more series later is a single commit.
+- [x] ~~Photographer's name / display name and about-page copy.~~ Name:
+  **Keller Leonard.** About-page copy is drafted in `src/pages/about.astro` —
+  placeholder to edit; no portrait yet.
 - [x] ~~Show EXIF?~~ **No.** Stripped at import, not displayed. Settled.
+
+> **Deploy note:** the build is **static** (`output: 'static'`, `dist/`) — no
+> server runtime, so the sharp image pipeline and build-time LQIP run in Node at
+> build. It deploys on the existing Cloudflare **Workers** project as **static
+> assets**: `wrangler.jsonc` has no `main`, just `assets.directory: ./dist`, so
+> `wrangler deploy` (or a Workers Build running `npm run build`) publishes the
+> static output with no `_worker.js`. The `@astrojs/cloudflare` adapter is no
+> longer used and could be removed. (Cloudflare **Pages** would work equally —
+> point it at build `npm run build`, output `dist` — but is not required.)
